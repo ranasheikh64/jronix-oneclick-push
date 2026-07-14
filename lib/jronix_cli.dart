@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-const String configDirName = '.ai_push';
-const String configFileName = 'config.json';
+const String configFileName = '.env';
 
 void printUsage() {
   print('🌟 Welcome to AI Push (Built by Jronix) 🌟');
@@ -12,35 +11,51 @@ void printUsage() {
 }
 
 Future<void> initConfig() async {
-  final dir = Directory(configDirName);
-  if (!await dir.exists()) {
-    await dir.create();
+  stdout.write('Enter your Gemini API Key (from Google AI Studio): ');
+  final apiKey = stdin.readLineSync()?.trim() ?? '';
+
+  stdout.write('Enter your Author Name for commits (e.g. Rana Sheikh): ');
+  final author = stdin.readLineSync()?.trim() ?? 'Jronix User';
+
+  final envFile = File(configFileName);
+  await envFile.writeAsString('GEMINI_API_KEY=$apiKey\nAUTHOR=$author\nMODEL=gemini-1.5-pro\n');
+
+  final gitignore = File('.gitignore');
+  if (await gitignore.exists()) {
+    final content = await gitignore.readAsString();
+    if (!content.contains('.env')) {
+      await gitignore.writeAsString('\n.env\n', mode: FileMode.append);
+    }
+  } else {
+    await gitignore.writeAsString('.env\n');
   }
 
-  final configFile = File('${dir.path}/$configFileName');
-  
-  final config = {
-    "provider": "gemini",
-    "model": "gemini-1.5-pro",
-    "api_key": "AIzaSyA1yNb-DKXY6P-BOGtN4o0foCni7jApOrU",
-    "author": "Rana Sheikh"
-  };
-
   print('🌟 Welcome to AI Push (Built by Jronix) 🌟');
-  await configFile.writeAsString(jsonEncode(config));
-  print('✅ Initialization complete. Config saved at ${configFile.path}');
+  print('✅ Initialization complete. Config saved at .env and added to .gitignore');
   print('💡 You can now simply run "push" to commit and push your code!');
 }
 
 Future<Map<String, dynamic>?> loadConfig() async {
-  final configFile = File('$configDirName/$configFileName');
-  if (!await configFile.exists()) {
-    print('❌ Config not found. Please run "push init" first.');
+  final envFile = File(configFileName);
+  if (!await envFile.exists()) {
+    print('❌ .env not found. Please run "push init" first.');
     return null;
   }
   
-  final content = await configFile.readAsString();
-  return jsonDecode(content) as Map<String, dynamic>;
+  final lines = await envFile.readAsLines();
+  final config = <String, dynamic>{};
+  for (var line in lines) {
+    if (line.trim().isEmpty || line.startsWith('#')) continue;
+    final parts = line.split('=');
+    if (parts.length >= 2) {
+      final key = parts[0].trim();
+      final value = parts.sublist(1).join('=').trim();
+      if (key == 'GEMINI_API_KEY') config['api_key'] = value;
+      if (key == 'AUTHOR') config['author'] = value;
+      if (key == 'MODEL') config['model'] = value;
+    }
+  }
+  return config;
 }
 
 Future<void> performPush() async {
@@ -72,11 +87,16 @@ Future<void> performPush() async {
 
   print('🧠 Analyzing changed files and generating commit message...');
   
-  final commitMessage = await generateCommitMessage(diff, config);
+  String? commitMessage = await generateCommitMessage(diff, config);
   
   if (commitMessage == null || commitMessage.isEmpty) {
-    print('❌ Failed to generate commit message.');
-    return;
+    print('⚠️ AI failed to generate commit message.');
+    stdout.write('Please enter your commit message manually: ');
+    commitMessage = stdin.readLineSync()?.trim();
+    if (commitMessage == null || commitMessage.isEmpty) {
+      print('❌ Commit cancelled.');
+      return;
+    }
   }
   
   final date = DateTime.now().toString().split('.').first;
@@ -112,7 +132,8 @@ Date: $date''';
 
 Future<String?> generateCommitMessage(String diff, Map<String, dynamic> config) async {
   final apiKey = config['api_key'];
-  final url = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$apiKey');
+  final model = config['model'] ?? 'gemini-1.5-pro';
+  final url = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey');
 
   final prompt = '''
 You are a senior software engineer.
@@ -157,11 +178,11 @@ $diff
       final text = json['candidates'][0]['content']['parts'][0]['text'];
       return text.toString().trim();
     } else {
-      print('API Error: \${response.statusCode} - \$responseBody');
+      print('API Error: ${response.statusCode} - $responseBody');
       return null;
     }
   } catch (e) {
-    print('Error calling API: \$e');
+    print('Error calling API: $e');
     return null;
   }
 }
