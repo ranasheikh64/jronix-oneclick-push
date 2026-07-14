@@ -15,9 +15,8 @@ An automated, AI-powered Git commit and push CLI tool built with Dart. It automa
 You can install this CLI directly from GitHub globally on your machine. Run the following command in your terminal:
 
 ```bash
-dart pub global activate --source git https://github.com/YOUR_GITHUB_USERNAME/jronix_cli.git
+dart pub global activate --source git https://github.com/ranasheikh64/jronix-oneclick-push.git
 ```
-*(Make sure to replace `YOUR_GITHUB_USERNAME` with your actual GitHub username)*
 
 Once installed, the `push` command will be globally available on your system!
 
