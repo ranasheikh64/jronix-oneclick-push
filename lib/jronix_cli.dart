@@ -85,9 +85,12 @@ Future<void> performPush() async {
     return;
   }
 
-  print('🧠 Analyzing changed files and generating commit message...');
+  final spinner = Spinner('🧠 Analyzing changed files and generating commit message...');
+  spinner.start();
   
   String? commitMessage = await generateCommitMessage(diff, config);
+  
+  spinner.stop();
   
   if (commitMessage == null || commitMessage.isEmpty) {
     print('⚠️ AI failed to generate commit message.');
@@ -184,5 +187,32 @@ $diff
   } catch (e) {
     print('Error calling API: $e');
     return null;
+  }
+}
+
+class Spinner {
+  bool _isSpinning = false;
+  final List<String> _frames = ['⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏'];
+  int _index = 0;
+  final String message;
+
+  Spinner(this.message);
+
+  void start() {
+    _isSpinning = true;
+    _spin();
+  }
+
+  void stop() {
+    _isSpinning = false;
+    stdout.write('\r\x1B[K'); // clear line
+  }
+
+  void _spin() async {
+    while (_isSpinning) {
+      stdout.write('\r${_frames[_index]} $message');
+      _index = (_index + 1) % _frames.length;
+      await Future.delayed(Duration(milliseconds: 80));
+    }
   }
 }
