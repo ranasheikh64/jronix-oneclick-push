@@ -18,7 +18,7 @@ Future<void> initConfig() async {
   final author = stdin.readLineSync()?.trim() ?? 'Jronix User';
 
   final envFile = File(configFileName);
-  await envFile.writeAsString('GEMINI_API_KEY=$apiKey\nAUTHOR=$author\nMODEL=gemini-1.5-pro\n');
+  await envFile.writeAsString('GEMINI_API_KEY=$apiKey\nAUTHOR=$author\nMODEL=gemini-1.5-flash\n');
 
   final gitignore = File('.gitignore');
   if (await gitignore.exists()) {
@@ -132,7 +132,7 @@ Date: $date''';
 
 Future<String?> generateCommitMessage(String diff, Map<String, dynamic> config) async {
   final apiKey = config['api_key'];
-  final model = config['model'] ?? 'gemini-1.5-pro';
+  final model = config['model'] ?? 'gemini-1.5-flash';
   final url = Uri.parse('https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey');
 
   final prompt = '''
