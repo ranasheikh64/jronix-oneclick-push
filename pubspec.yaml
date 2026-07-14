@@ -1,0 +1,16 @@
+name: jronix_cli
+description: AI powered Git push CLI tool
+version: 1.0.0
+publish_to: none
+
+environment:
+  sdk: ^3.4.0
+
+dependencies:
+  http: ^1.2.1
+
+executables:
+  push: push
+
+dev_dependencies:
+  test: ^1.24.0
