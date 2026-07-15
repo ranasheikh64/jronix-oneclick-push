@@ -170,8 +170,10 @@ $diff
   try {
     final httpClient = HttpClient();
     final request = await httpClient.postUrl(url);
-    request.headers.set('Content-Type', 'application/json');
-    request.write(jsonEncode(requestBody));
+    request.headers.set('Content-Type', 'application/json; charset=utf-8');
+    
+    final requestBodyString = jsonEncode(requestBody);
+    request.add(utf8.encode(requestBodyString));
     
     final response = await request.close();
     final responseBody = await response.transform(utf8.decoder).join();
