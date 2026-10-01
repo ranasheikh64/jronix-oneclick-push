@@ -1,7 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
-const String configFileName = '.env';
+const String localConfigFileName = '.env';
+
+String getGlobalConfigPath() {
+  String? home = Platform.environment['HOME'] ?? Platform.environment['USERPROFILE'];
+  return home != null ? '$home/.ai_push_config' : '.ai_push_config';
+}
 
 void printUsage() {
   print('🌟 Welcome to AI Push (Built by Jronix) 🌟');
@@ -37,10 +42,10 @@ Future<void> initConfig() async {
   stdout.write('Enter your Author Name for commits (e.g. Rana Sheikh): ');
   final author = stdin.readLineSync()?.trim() ?? 'Jronix User';
 
-  final envFile = File(configFileName);
+  final configFile = File(getGlobalConfigPath());
   String envContent = '';
-  if (await envFile.exists()) {
-    envContent = await envFile.readAsString();
+  if (await configFile.exists()) {
+    envContent = await configFile.readAsString();
   }
 
   envContent = _updateOrAppendEnv(envContent, 'AI_PUSH_API_KEY', apiKey);
@@ -53,31 +58,28 @@ Future<void> initConfig() async {
     envContent = _updateOrAppendEnv(envContent, 'AI_PUSH_MODEL', 'gpt-4o-mini');
   }
 
-  await envFile.writeAsString(envContent);
-
-  final gitignore = File('.gitignore');
-  if (await gitignore.exists()) {
-    final content = await gitignore.readAsString();
-    if (!content.contains('.env')) {
-      await gitignore.writeAsString('\n.env\n', mode: FileMode.append);
-    }
-  } else {
-    await gitignore.writeAsString('.env\n');
-  }
+  await configFile.writeAsString(envContent);
 
   print('🌟 Welcome to AI Push (Built by Jronix) 🌟');
-  print('✅ Initialization complete. Config saved at .env and added to .gitignore');
-  print('💡 You can now simply run "push" to commit and push your code!');
+  print('✅ Initialization complete. Global config saved securely on your machine.');
+  print('💡 You can now simply run "push" in ANY project to commit and push your code!');
 }
 
 Future<Map<String, dynamic>?> loadConfig() async {
-  final envFile = File(configFileName);
-  if (!await envFile.exists()) {
-    print('❌ .env not found. Please run "push init" first.');
-    return null;
+  final configFile = File(getGlobalConfigPath());
+  
+  File fileToRead = configFile;
+  if (!await configFile.exists()) {
+    final localEnv = File(localConfigFileName);
+    if (await localEnv.exists()) {
+      fileToRead = localEnv;
+    } else {
+      print('❌ Configuration not found. Please run "push init" once to set it up globally.');
+      return null;
+    }
   }
   
-  final lines = await envFile.readAsLines();
+  final lines = await fileToRead.readAsLines();
   final config = <String, dynamic>{
     'api_type': 'gemini', // default
   };
