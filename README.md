@@ -23,17 +23,17 @@ Once installed, the `push` command will be globally available on your system!
 
 ## 📚 How to Use
 
-### Step 1: Initialize a Project
+### Step 1: Initialize (Only Once!)
 
-Go to any of your Git projects and run:
+Open your terminal anywhere and run:
 ```bash
 push init
 ```
-This will safely append the AI Push configuration to your `.env` file (and add it to `.gitignore` if it's not already there). It will ask for your API key and Author name. It will automatically detect if you are using OpenAI or Gemini based on your key format.
+This will securely save the configuration **globally on your machine** (in `~/.ai_push_config`). You only need to do this once! It will automatically detect if you are using an OpenAI or Gemini key.
 
 ### Step 2: Push Your Code!
 
-Whenever you finish working and want to push your code to GitHub, simply type:
+Now you can go to **any Git project** on your computer. Whenever you finish working, simply type:
 ```bash
 push
 ```
@@ -45,13 +45,6 @@ That's it! The CLI will:
 4. `git commit -m "..."`
 5. `git push origin <current-branch>`
 
-## ⚙️ Configuration (`.env`)
+## ⚙️ Configuration
 
-The CLI securely saves its configuration into your project's `.env` file using the `AI_PUSH_` prefix so it won't conflict with your app's variables. If you need to update it manually, look for these variables:
-
-```env
-AI_PUSH_API_KEY=your_api_key_here
-AI_PUSH_API_TYPE=openai_or_gemini
-AI_PUSH_AUTHOR=Your Name
-AI_PUSH_MODEL=gpt-4o-mini
-```
+The CLI securely saves its configuration globally in your user directory (`~/.ai_push_config`). If you need to update it, you can just run `push init` again or edit the file manually. (It also fully supports falling back to a local project `.env` file if you have project-specific keys).
